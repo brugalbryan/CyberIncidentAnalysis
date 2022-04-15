@@ -362,4 +362,3 @@ ggplot(data = penguins,
        title = "Bar Graph of Penguins in Different Island") +
   theme_classic()
 ```
-
