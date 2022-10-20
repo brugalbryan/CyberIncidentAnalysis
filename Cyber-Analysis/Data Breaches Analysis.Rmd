@@ -1,0 +1,197 @@
+---
+title: "Data Breaches Analisys"
+author: "Bryan Brugal"
+output:
+  word_document: default
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+**In this project, I'll look into the most common cyber security breaches in the United States between 2007 and 2014.**
+
+**The purpose of analyzing this historical data set is to gain a better understanding of cyber breaches and how they affect both the targeted organizations and the individuals they serve.**
+
+
+**This data set is important because it can assist us in determining the attacker's objectives. Knowing their motivations can help businesses in understanding what needs to be protected. It also gives us a sense of what attackers are capable of and what they'll go after once they've gained access to the target network.**
+
+### Load the library for tidyverse package
+```{r}
+library(tidyverse)
+```
+
+### Load the csv file
+```{r}
+## Storing the data-set into a name
+Cyber_Security_Breaches <- read.csv("Cyber_Security_Breaches.csv")
+```
+
+# Let's have a look at what the data look like:
+```{r}
+head(Cyber_Security_Breaches)
+```
+
+
+View(Cyber_Security_Breaches)   
+
+# check for variable name 
+```{r}
+colnames(Cyber_Security_Breaches)
+```
+  
+I will target variables: 
+- Name_of_Covered_Entity  
+- State 
+- Business_Associate_Involved
+- Individuals_Affected 
+- Date_of_Breach   
+- Type_of_Breach 
+- Location_of_Breached_Information
+- year
+
+
+# Subset a new dataframe from the original dataframe that contains ONLY the variable that I targeted. 
+# Based on the location of the column, then I know that I need column numbers: 3 to 9 and 14
+
+```{r}
+csb <- Cyber_Security_Breaches[  , c(3 : 9, 14)]
+head(csb)
+# tail(csb)
+```
+
+# Check for the structure
+
+```{r}
+csb %>% str()
+```
+
+
+# Changing variable names  
+    
+```{r}
+csb <- csb %>% rename( 
+  Entity = Name_of_Covered_Entity ,
+  Business_Associate = Business_Associate_Involved ,
+  Location = Location_of_Breached_Information ) 
+csb %>% str()
+```
+
+View(csb)
+
+# Check for unique values
+```{r}
+unique(csb$State)
+unique(csb$Type_of_Breach)
+unique(csb$Location)
+```
+
+# Factor qualitative values
+```{r}
+csb$State <- factor(csb$State)
+csb$Type_of_Breach <- factor(csb$Type_of_Breach)
+csb$Location <- factor(csb$Location)
+csb %>% str()
+levels(csb$Location)
+```
+
+## count() - count rows/observations
+
+# Number of cyber security breaches per state
+```{r}
+csb %>% count(State)
+```
+**California is the state with the most reported cyber-attacks.**
+
+
+# Cyber Security Breaches with states nj AND type of breach loss
+```{r}
+csb %>% 
+  filter(State == "NY" & Type_of_Breach == "Loss")
+```
+# Cyber Security Breaches with individuals affected is greater than 500K
+```{r}
+csb %>% filter(Individuals_Affected > 500000)
+```
+
+# Generate a summary table containing the mean and Standard deviation of cyber security breach of individual affected, grouped by state
+```{r}
+csb %>% group_by(State) %>%
+  summarize(individual_mean = mean(Individuals_Affected, na.rm = T),
+  individual_sd = sd(Individuals_Affected, na.rm = T))
+```
+
+# A summary table containing the maximum and minimum Individuals_Affected for Theft NY ciber security breach, group by year.  
+```{r}
+# unique(csb$Type_of_Breach)
+csb %>% 
+  filter(State == "NY" , Type_of_Breach == "Theft") %>% 
+  group_by(year) %>% 
+  summarize(Individuals_Affected.max = max(Individuals_Affected),
+            Individuals_Affected.min = min(Individuals_Affected))
+
+```
+
+**2010 is the year with most individual affected was with over a million** 
+
+**na.omit()** - to drop missing values. 
+```{r}
+unique(is.na(csb))
+csb <- csb %>%
+  na.omit()
+```
+**There were not missing values**
+
+# Part 5: Visualization 
+
+## Bar Plot of Cyber Security Breach Counts for different type of breach
+
+```{r}
+
+ggplot(data = csb, 
+       mapping = aes(x = Type_of_Breach)) +
+  geom_bar(color = "#42C2FF", 
+           fill = "seagreen", 
+           width = 0.5) +
+
+  labs(x = "Type Of Breach" , 
+       y = "Cyber-Sec-Breach Counts" , 
+       title = "Bar Graph of Cyber security Breach in Different Type of Breach") +
+  theme_minimal() +
+  coord_flip()
+# unique(csb$State)
+# unique(csb$Type_of_Breach)
+# unique(csb$Location)
+```
+
+**Based on the Bar Graph theft is the most commun type of breach**
+
+Bar Graph of Cyber Security Breach counts by year
+```{r}
+ggplot(data = csb, 
+       mapping = aes(x = year)) +
+  geom_bar(color = "burlywood", 
+           fill = "moccasin", 
+           width = 0.3) +
+  geom_text(stat ="count", 
+            mapping = aes(label = ..count..), 
+            vjust = 1) + 
+  labs(x = "Year Of Cyber Security Breach" , 
+       y = "Cyber-Sec-Breach Counts" , 
+       title = "Bar Graph of Cyber Security Breach in By Years") +
+  theme_grey() 
+```
+
+**Based on the Bar graph the year with the most cyber attacks is 2013, and the graph show an increase of cyber breach count as time passes and decline in 2014, forming an exponential curve.**
+
+**Conclusion: The following are the main findings:**
+
+  -The most common cyber-attack was theft.
+
+  -California is the state with the most reported cyber-attacks.
+
+  -The year with the most recorded cyber-attacks is 2013.
+
+  -As indicated above, the period 2009 to 2013 had the highest number of attacks, particularly theft.
